@@ -24,17 +24,38 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using System.Text.Json;
 
 namespace LoginApp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
+            //File.Create("person.json");
+            //var users = JsonSerializer.Deserialize<User>(File.ReadAllText("/person.json"));
+            //var user = new User
+            //{
+            //    Login = "test",
+            //    Password = "test",
+            //};
+
+            //string jsonString = JsonSerializer.Serialize<User>(user);
+
+            //Console.WriteLine(jsonString);
+            // если файла нет. то создаем
+            //Console.WriteLine(File.)
+            //if (!File.Exists("users.txt")) File.Create("users.txt");
+
+            //var users = File.ReadAllText("users.txt");
+            //Console.WriteLine(users);
+            
             InitializeComponent();
+
         }
         public bool IsDarkTheme { get; set; }
         private readonly PaletteHelper paletteHelper = new PaletteHelper();
@@ -68,17 +89,65 @@ namespace LoginApp
 
         private void loginBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (userNameTxtBox.Text == "root" || passwordTxtBox.Password == "1234")
+
+            string login = userNameTxtBox.Text.Trim();
+            string pass = passwordTxtBox.Password.Trim();
+            Console.Write(login);
+            if(string.IsNullOrEmpty(login) || string.IsNullOrEmpty(pass)) MessageBox.Show("Введите логин и пароль!");
+            try
             {
-                // изменяем фото
+                User? user = User.FindUserOrLogin(login, pass);
+                ListUser test = new ListUser();
+                
+            
                 string dir = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
                 LogoLogin.Source = BitmapFrame.Create(new Uri($"{dir}/Resources/logo.png"));
             }
+            catch (ArgumentException error)
+            {
+                MessageBox.Show(error.Message);
+            }
+            
+        }
+
+        private void registerBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string login = userNameTxtBox.Text.Trim();
+            string pass = passwordTxtBox.Password.Trim();
+
+            if (login.Length < 5)
+            {
+                userNameTxtBox.ToolTip = "Поле введено не верно";
+                userNameTxtBox.Background = Brushes.Red;
+            }
+            else
+
+            if (pass.Length < 6)
+            {
+                passwordTxtBox.ToolTip = "Пароль должен содержать не менее 6 символов";
+                passwordTxtBox.Background = Brushes.Red;
+            }
             else
             {
-                MessageBox.Show("Данные введены неверно!");
-            }
+                // сохраняем пользователя
+                User user = new User()
+                {
+                    Password = pass,
+                    Login = login,
+                };
 
+                ListUser test = new ListUser();
+                test.Add(user); 
+
+                userNameTxtBox.ToolTip = "";
+                userNameTxtBox.Background = Brushes.Transparent;
+                
+                passwordTxtBox.ToolTip = "";
+                passwordTxtBox.Background = Brushes.Transparent;
+                // блокируем кнопку регистрации
+                RegisterButton.IsEnabled = false;
+                MessageBox.Show("Регистрация прошла успешно, теперь вы можете войти указав логин и пароль.");
+            }
         }
     }
 }
